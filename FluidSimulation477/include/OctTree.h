@@ -99,6 +99,8 @@ class OctTree
 	bool isSubdivided = false;
 
 	void initializeSubnodes();
+private:
+	void checkOctant(Particle*);
 
 public:
 	OctTree();
@@ -110,5 +112,7 @@ public:
 	void insert(Particle*);
 	bool inBoundary(Vec3);
 	bool isRoot();
-	void checkOctant(Particle*);
+	bool withinSphere(Vec3, float);
+	static bool cubeIntersectsSphere(Vec3, Vec3, Vec3, float);
+	void getNeighbors(Particle* particle, Particle* partArray, int, float, int&);
 };

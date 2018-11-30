@@ -11,6 +11,9 @@ OctTree::OctTree()
 OctTree::OctTree(Vec3 _bottomLeftBack, Vec3 _topRightFront, OctTree* parent)
 	:particle(), bottomLeftBack(_bottomLeftBack), topRightFront(_topRightFront)
 {
+	center.x = (_topRightFront.x + _bottomLeftBack.x) / 2; 
+	center.y = (_topRightFront.y + _bottomLeftBack.y) / 2;
+	center.z = (_topRightFront.z + _bottomLeftBack.z) / 2;
 	initializeSubnodes();
 }
 
@@ -30,7 +33,7 @@ void OctTree::checkOctant(Particle* particle)
 	if (center.x >= particle->position.x)
 	{
 		//Check if in bottom half
-		if (center.y >= particle->position.z)
+		if (center.y >= particle->position.y)
 		{
 			//Check if in back half
 			if (center.z >= particle->position.z)
@@ -144,14 +147,73 @@ void OctTree::reset()
 
 	for (int i = 0; i < 8; ++i)
 	{
-		delete subnodes[i];
-		subnodes[i] = NULL;
+		if (subnodes[i] != NULL)
+		{
+			delete subnodes[i];
+			subnodes[i] = NULL;
+		}
 	}
 
 	if (this->particle != NULL)
 		this->particle = NULL;
 
 	isSubdivided = false;
+}
+
+bool OctTree::withinSphere(Vec3 center, float radius)
+{
+	float dist = this->particle->position.distance(center);
+	if (dist <= radius * radius)
+		return true;
+	return false;
+}
+
+void OctTree::getNeighbors(Particle* particle, Particle* partArray, int numNeighbors, float radius, int &curNeighborIdx)
+{
+	if (curNeighborIdx < numNeighbors)
+	{
+		//Check if at a leaf node
+		if (this->particle != NULL)
+		{
+			if (this->particle->position.distance(particle->position) <= radius)
+			{
+				if (this->particle != particle)
+				{
+					partArray[curNeighborIdx] = *this->particle;
+					curNeighborIdx++;
+				}
+			}
+			return;
+		}
+		//Check if sphere of the radius intersects with a subnode
+		for (int i = 0; i < 8; ++i)
+		{
+			if (subnodes[i] != NULL)
+			{
+				if (this->cubeIntersectsSphere(subnodes[i]->bottomLeftBack, subnodes[i]->topRightFront,
+					particle->position, radius))
+				{
+					subnodes[i]->getNeighbors(particle, partArray, numNeighbors, radius, curNeighborIdx);
+				}
+			}
+		}
+	}
+}
+
+/*
+Taken from:: https://stackoverflow.com/questions/4578967/cube-sphere-intersection-test
+*/
+bool OctTree::cubeIntersectsSphere(Vec3 C1, Vec3 C2, Vec3 S, float R)
+{
+	float dist_squared = R * R;
+	/* assume C1 and C2 are element-wise sorted, if not, do that now */
+	if (S.x < C1.x) dist_squared -= (S.x - C1.x) * (S.x - C1.x);
+	else if (S.x > C2.x) dist_squared -= (S.x - C2.y) * (S.x - C2.y);
+	if (S.y < C1.y) dist_squared -= (S.y - C1.y) * (S.y - C1.y);
+	else if (S.y > C2.y) dist_squared -= (S.y - C2.y) * (S.y - C2.y);
+	if (S.z < C1.z) dist_squared -= (S.z - C1.z) * (S.z - C1.z);
+	else if (S.z > C2.z) dist_squared -= (S.z - C2.z) * (S.z - C2.z);
+	return dist_squared > 0;
 }
 
 bool OctTree::inBoundary(Vec3 _pos)

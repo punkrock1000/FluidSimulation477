@@ -18,16 +18,33 @@
 #include "OctTree.h"
 using namespace std;
 
-#define NUM_OF_PARTICLES 10000
+#define NUM_OF_PARTICLES 3000
 #define NUM_NEIGHBORS 16
-#define RADIUS 8
+#define RADIUS 10
 //Low corner of the initial tree
 #define LC -100
 //High corner of the tree
 #define HC 100
 
+//Variables required for the simulation
+const static Vector3f G(0.0f, 42000 * -9.8f, 0.0f);
+//const static float M_PI = atan(1) * 4;
+const static float REST_DENS = 1000.0f;
+const static float GAS_CONST = 2000.0f;
+const static float H = 16.0f;
+const static float HSQ = H * H;
+const static float VISC = 250.0f;
+
+const static float POLY6 = 315.0f / (65.0f * M_PI * pow(H, 9.6f));
+const static float SPIKY_GRAD = -45.0f / (M_PI*pow(H, 4.0f));
+const static float VISC_LAP = 45.0f / (M_PI*pow(H, 6.0f));
+
+const static float TIMESTEP = 0.003f;
+const static float BOUND_DAMPING = -0.5f;
+
 OctTree* myTree;
 WaterParticle* partArray;
+WaterParticle* neighborArrays[NUM_OF_PARTICLES];
 
 //Timer
 using fast_clock = std::chrono::high_resolution_clock;
@@ -45,7 +62,7 @@ double _right = 0.0;
 double _bottom = 0.0;
 double _top = 0.0;
 double _zNear = 0.1;
-double _zFar = 150.0;
+double _zFar = 2000.0;
 double fovy = 45.0;
 double prev_z = 0;
 
@@ -63,6 +80,95 @@ bool _mouseRight = false;
 double _dragPosX = 0.0;
 double _dragPosY = 0.0;
 double _dragPosZ = 0.0;
+
+//Computes the density and pressure for all particles
+void computeDensityPressure(WaterParticle* particles, WaterParticle** neighborArrays)
+{
+	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
+	{
+		particles[i].rho = 0;
+		for (int j = 0; j < particles[i].neighbors; ++j)
+		{
+			Vector3f distVec = neighborArrays[i][j].r - particles[i].r;
+			float dist = distVec.norm();
+			dist *= dist;
+			particles[i].rho += particles[i].m*POLY6*pow(HSQ - dist, 3.0f);
+		}
+		particles[i].rho *= 10000000;
+		particles[i].rho -= 150;
+		particles[i].p = GAS_CONST * (particles[i].rho - REST_DENS);
+	}
+}
+
+//Computes the forces required for the simulation for all particles
+void computeForces(WaterParticle* particles, WaterParticle** neighborArrays)
+{
+	Vector3f fPress(0.0f, 0.0f, 0.0f);
+	Vector3f fVisc(0.0f, 0.0f, 0.0f);
+	Vector3f fGrav(0.0f, 0.0f, 0.0f);
+	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
+	{
+		fPress.setZero();
+		fVisc.setZero();
+		//std::cout << particles[i].neighbors << "   <-- NEIGHBOR NUM" << endl;
+		for (int j = 0; j < particles[i].neighbors; ++j)
+		{
+			Vector3f distVec = neighborArrays[i][j].r - particles[i].r;
+			float dist = distVec.norm();
+			fPress += -distVec.normalized() * particles[i].m *
+				(particles[i].p + neighborArrays[i][j].p) /
+				(1 + (2.0f * neighborArrays[i][j].rho) * SPIKY_GRAD * pow(H - dist, 2.0f));
+
+			fVisc += (neighborArrays[i][j].v - particles[i].v) * VISC * particles[i].m / 
+				(1 + neighborArrays[i][j].rho * VISC_LAP * (H - dist));
+		}
+		fGrav = G;
+		fGrav = fGrav * particles[i].rho;
+
+		particles[i].f = fPress + fVisc + fGrav;
+	}
+}
+
+//Updates the positions of the particles using the new forces
+void integrate(WaterParticle* particles)
+{
+	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
+	{
+		particles[i].v = particles[i].f * TIMESTEP / particles[i].rho;
+		particles[i].r += particles[i].v * TIMESTEP;
+
+		if ((particles[i].r.x()) < LC)
+		{
+			particles[i].v.x() *= BOUND_DAMPING;
+			particles[i].r.x() = LC + H / 20;
+		}
+		if ((particles[i].r.y()) < LC)
+		{
+			particles[i].v.y() *= BOUND_DAMPING;
+			particles[i].r.y() = LC + H / 4.6;
+		}
+		if ((particles[i].r.z()) < LC)
+		{
+			particles[i].v.z() *= BOUND_DAMPING;
+			particles[i].r.z() = LC + H / 20;
+		}
+		if ((particles[i].r.x()) > HC)
+		{
+			particles[i].v.x() *= BOUND_DAMPING;
+			particles[i].r.x() = HC - H / 20;
+		}
+		if ((particles[i].r.y()) > HC)
+		{
+			particles[i].v.y() *= BOUND_DAMPING;
+			particles[i].r.y() = HC - H / 20;
+		}
+		if ((particles[i].r.z()) > HC)
+		{
+			particles[i].v.z() *= BOUND_DAMPING;
+			particles[i].r.z() = HC - H / 20;
+		}
+	}
+}
 
 float RandomFloat(float a, float b) {
 	float random = ((float)rand()) / (float)RAND_MAX;
@@ -135,7 +241,7 @@ void init()
      //Translate camera
      glPushMatrix();
      glLoadIdentity();
-     glTranslatef(0,0,-100.0);
+     glTranslatef(0,0,-300.0);
 	 glRotatef(40, 0, 1, 0);
      glMultMatrixd(_matrix);
      getMatrix();
@@ -209,14 +315,14 @@ void mouseEvent(int button, int state, int x, int y)
 	    break;
     case 4:         //Zoomout
         glLoadIdentity();
-        glTranslatef(0,0,-0.1);
+        glTranslatef(0,0,-2.0);
         glMultMatrixd(_matrix);
         getMatrix();
         glutPostRedisplay();
         break;
     case 3:         //Zoomin
         glLoadIdentity();
-        glTranslatef(0,0,0.1);
+        glTranslatef(0,0,2.0);
         glMultMatrixd(_matrix);
         getMatrix();
         glutPostRedisplay();
@@ -305,8 +411,68 @@ void mouseMoveEvent(int x, int y)
     }
 }
 
+void resetSimulationVariables()
+{
+	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
+	{
+		delete neighborArrays[i];
+	}
+	myTree->reset();
+}
+
+void instantiateOctTree(OctTree* simTree, WaterParticle* particles)
+{
+	//Check if array has been instantiated
+	if (particles[0].m != 65.0f)
+	{
+		for (int i = 0; i < NUM_OF_PARTICLES; i++)
+		{
+			particles[i].setPosition(Vector3f(RandomFloat(LC / 3, HC / 3),
+				RandomFloat(LC / 3, HC / 3),
+				RandomFloat(LC / 3, HC / 3)));
+			particles[i].m = 65.0f;
+			particles[i].v = Vector3f(0.0f, 0.0f, 0.0f);
+			particles[i].p = 1000.0f;
+			particles[i].neighbors = 0;
+
+			simTree->insert(&particles[i]);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < NUM_OF_PARTICLES; i++)
+		{
+			simTree->insert(&particles[i]);
+		}
+	}
+}
+
+void calculateSimulationVariables()
+{
+	instantiateOctTree(myTree, partArray);
+
+	int neighbCount = 0;
+	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
+	{
+		neighborArrays[i] = new WaterParticle[NUM_NEIGHBORS];
+		myTree->getNeighbors(&partArray[i], neighborArrays[i], NUM_NEIGHBORS, RADIUS, neighbCount);
+		partArray[i].neighbors = neighbCount;
+		neighbCount = 0;
+	}
+
+	// Get forces from neighbors
+	computeDensityPressure(partArray, neighborArrays);
+
+	computeForces(partArray, neighborArrays);
+
+	// Update positions from forces
+	integrate(partArray);
+}
+
 void display()
 {
+	calculateSimulationVariables();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
@@ -318,9 +484,11 @@ void display()
 	}
 
     glutSwapBuffers();
+
+	resetSimulationVariables();
 }
 
-void initializeOctTree()
+void initializeSimVariables()
 {
 	//The tree to hold our particles
 	myTree = new OctTree(Vector3f(LC, LC, LC), Vector3f(HC, HC, HC), NULL);
@@ -328,24 +496,16 @@ void initializeOctTree()
 	//The array which will also hold the particles for displaying
 	partArray = new WaterParticle[NUM_OF_PARTICLES];
 
-	//The arrays of the neighbors for each particle
-	WaterParticle* neighborArrays[NUM_OF_PARTICLES];
-
 	//Instantiating particles with random values
-	for (int i = 0; i < NUM_OF_PARTICLES; i++)
-	{
-		partArray[i].setPosition(Vector3f(RandomFloat(LC / 4, HC / 4), RandomFloat(LC / 4, HC / 4), RandomFloat(LC / 4, HC / 4)));
-		partArray[i].j = 3.0f;
+	//instantiateOctTree(myTree, partArray);
 
-		myTree->insert(&partArray[i]);
-	}
 	int neighbCount = 0;
 }
 
 int main(int argc, char **argv)
 {
 	//The tree to hold our particles
-	initializeOctTree();
+	initializeSimVariables();
 
     glutInit(&argc, argv);
     //Print contex info

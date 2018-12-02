@@ -14,6 +14,7 @@ OctTree::OctTree(Vector3f _bottomLeftBack, Vector3f _topRightFront, OctTree* par
 	center.x() = (_topRightFront.x() + _bottomLeftBack.x()) / 2; 
 	center.y() = (_topRightFront.y() + _bottomLeftBack.y()) / 2;
 	center.z() = (_topRightFront.z() + _bottomLeftBack.z()) / 2;
+	this->parent = parent;
 	initializeSubnodes();
 }
 
@@ -69,7 +70,7 @@ void OctTree::checkOctant(WaterParticle* particle)
 	else
 	{
 		//Check if in bottom half
-		if (center.y() >= particle->r.z())
+		if (center.y() >= particle->r.y())
 		{
 			//Check if in back half
 			if (center.z() >= particle->r.z())
@@ -192,10 +193,23 @@ void OctTree::getNeighbors(WaterParticle* particle, WaterParticle* partArray, in
 			{
 				if (this->cubeIntersectsSphere(subnodes[i]->bottomLeftBack, subnodes[i]->topRightFront,
 					particle->r, radius))
-				{
 					subnodes[i]->getNeighbors(particle, partArray, numNeighbors, radius, curNeighborIdx);
-				}
 			}
+		}
+	}
+}
+
+void OctTree::countParticles(int &particleCount)
+{
+	if (this->particle != NULL)
+	{
+		particleCount++;
+	}
+	for (int i = 0; i < 8; ++i)
+	{
+		if (subnodes[i] != NULL)
+		{
+			subnodes[i]->countParticles(particleCount);
 		}
 	}
 }

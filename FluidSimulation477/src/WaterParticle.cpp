@@ -2,7 +2,7 @@
 
 WaterParticle::WaterParticle()
 {
-	j = 0.05;//particle mass
+	m = 0.05;//particle mass
 	r << -1, -1, -1;
 	p = 0.005;//particle density
 	//a = new WaterParticle[8];//neighbours 0-7
@@ -22,8 +22,4 @@ void WaterParticle::draw()
 	glTranslatef(r(0), r(1), r(2));
 	glutSolidSphere(rad, nSlices, nStacks);
 	glPopMatrix();
-}
-
-WaterParticle::~WaterParticle()
-{
 }

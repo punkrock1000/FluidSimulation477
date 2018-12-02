@@ -43,4 +43,5 @@ public:
 	//bool withinSphere(Vector3f, float);
 	static bool cubeIntersectsSphere(Vector3f, Vector3f, Vector3f, float);
 	void getNeighbors(WaterParticle* particle, WaterParticle* partArray, int, float, int&);
+	void countParticles(int&);
 };

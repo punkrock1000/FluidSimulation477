@@ -14,9 +14,10 @@ using namespace Eigen;
 class WaterParticle
 {
 public:
-	float j;//particle mass
-	Vector3f r; //particle position
-	float p;//particle density
+	float m;//particle mass
+	Vector3f r, v, f; //particle position, velocity, force
+	float rho, p;//particle density, pressure
+	int neighbors;
 	//WaterParticle* a ;//neighbours 0-7
 
 	int global_Index;
@@ -39,6 +40,5 @@ public:
 
 
 	WaterParticle();
-	~WaterParticle();
 };
 

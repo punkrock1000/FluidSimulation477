@@ -335,9 +335,6 @@ void mouseEvent(int button, int state, int x, int y)
     pos(&_dragPosX, &_dragPosY, &_dragPosZ, x, y, viewport);
 }
 
-void mousePassiveFunc(int x, int y)
-{
-}
 void mouseMoveEvent(int x, int y)
 {
     bool changed = false;

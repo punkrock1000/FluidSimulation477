@@ -140,7 +140,10 @@ void OctTree::insert(WaterParticle* particle)
 		if (particle->r.x() == this->particle->r.x() &&
 			particle->r.y() == this->particle->r.y() &&
 			particle->r.z() == this->particle->r.z())
-			return;
+		{
+			Vector3f temp(particle->r.x(), particle->r.y() + 0.01, particle->r.z());
+			particle->setPosition(temp);
+		}
 		checkOctant(this->particle);
 		isSubdivided = true;
 		this->particle = NULL;
@@ -177,7 +180,7 @@ bool OctTree::withinSphere(Vector3f center, float radius)
 	return false;
 }
 
-void OctTree::getNeighbors(WaterParticle* particle, WaterParticle* partArray, int numNeighbors, float radius, int &curNeighborIdx)
+void OctTree::getNeighbors(WaterParticle* particle, int numNeighbors, float radius, int &curNeighborIdx)
 {
 	if (curNeighborIdx < numNeighbors)
 	{
@@ -188,7 +191,7 @@ void OctTree::getNeighbors(WaterParticle* particle, WaterParticle* partArray, in
 			{
 				if (this->particle != particle)
 				{
-					partArray[curNeighborIdx] = *this->particle;
+					particle->neighborIndexes[curNeighborIdx] = this->particle->arrayIndex;
 					curNeighborIdx++;
 				}
 			}
@@ -201,7 +204,7 @@ void OctTree::getNeighbors(WaterParticle* particle, WaterParticle* partArray, in
 			{
 				if (this->cubeIntersectsSphere(subnodes[i]->bottomLeftBack, subnodes[i]->topRightFront,
 					particle->r, radius))
-					subnodes[i]->getNeighbors(particle, partArray, numNeighbors, radius, curNeighborIdx);
+					subnodes[i]->getNeighbors(particle, numNeighbors, radius, curNeighborIdx);
 			}
 		}
 	}

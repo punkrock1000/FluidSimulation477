@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "simpleMath.h"
 #include "WaterParticle.h"
 #include "Eigen/Dense"
 
@@ -42,6 +41,6 @@ public:
 	bool withinSphere(Vector3f center, float radius);
 	//bool withinSphere(Vector3f, float);
 	static bool cubeIntersectsSphere(Vector3f, Vector3f, Vector3f, float);
-	void getNeighbors(WaterParticle* particle, WaterParticle* partArray, int, float, int&);
+	void getNeighbors(WaterParticle* particle, int, float, int&);
 	void countParticles(int&);
 };

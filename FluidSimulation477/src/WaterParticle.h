@@ -17,7 +17,8 @@ public:
 	float m;//particle mass
 	Vector3f r, v, f; //particle position, velocity, force
 	float rho, p;//particle density, pressure
-	int neighbors;
+	int neighbors, arrayIndex;
+	int neighborIndexes[16];
 	//WaterParticle* a ;//neighbours 0-7
 
 	int global_Index;

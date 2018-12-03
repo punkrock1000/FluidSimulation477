@@ -84,7 +84,6 @@
   <ItemGroup>
     <ClInclude Include="src\glm.h" />
     <ClInclude Include="src\OctTree.h" />
-    <ClInclude Include="src\simpleMath.h" />
     <ClInclude Include="src\utils.h" />
     <ClInclude Include="src\WaterParticle.h" />
   </ItemGroup>
@@ -92,7 +91,6 @@
     <ClCompile Include="src\glm.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\OctTree.cpp" />
-    <ClCompile Include="src\simpleMath.cpp" />
     <ClCompile Include="src\WaterParticle.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

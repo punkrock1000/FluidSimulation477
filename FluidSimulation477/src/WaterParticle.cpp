@@ -3,6 +3,8 @@
 WaterParticle::WaterParticle()
 {
 	m = 0.05;//particle mass
+	rho = 0;
+	arrayIndex = 0;
 	r << -1, -1, -1;
 	p = 0.005;//particle density
 	//a = new WaterParticle[8];//neighbours 0-7

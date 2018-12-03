@@ -18,9 +18,6 @@
     <Library Include="lib\freeglut.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\simpleMath.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\glm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -35,9 +32,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\simpleMath.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

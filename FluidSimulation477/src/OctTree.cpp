@@ -1,5 +1,13 @@
 #include "OctTree.h"
 
+float distance(Vector3f a, Vector3f b)
+{
+	float dx = a.x() - b.x();
+	float dy = a.y() - b.y();
+	float dz = a.z() - b.z();
+	return sqrt((dx*dx) + (dy*dy) + (dz*dz));
+}
+
 OctTree::OctTree()
 {
 	bottomLeftBack = Vector3f(0, 0, 0);
@@ -249,3 +257,4 @@ OctTree::~OctTree()
 		delete subnodes[i];
 	}
 }
+

@@ -16,7 +16,7 @@ class WaterParticle
 public:
 	float m;//particle mass
 	Vector3f r, v, f; //particle position, velocity, force
-	float rho, p;//particle density, pressure
+	float rho, p; //particle density, pressure
 	int neighbors, arrayIndex;
 	int neighborIndexes[16];
 

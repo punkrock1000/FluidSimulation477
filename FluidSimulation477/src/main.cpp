@@ -28,15 +28,19 @@ using namespace std;
 //High corner of the tree
 #define HC 64
 
+/*CONSTANTS*/
+//Mass of water particles
 const static float PARTICLE_MASS = 65.0f;
 const static float M_PI = atan(1) * 4;
 //Variables required for the simulation
 const static Vector3f G(0.0f, -9.81f, 0.0f);
 //const static float M_PI = atan(1) * 4;
+// Resting density
 const static float REST_DENS = 1000.0f;
 const static float GAS_CONST = 2000.0f;
 const static float H = 16.0f;
 const static float HSQ = H * H;
+// Viscosity
 const static float VISC = 20.0f;
 
 const static float POLY6 = 315.0f / (64.0f * M_PI * pow(H, 9.0f));

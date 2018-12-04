@@ -123,8 +123,10 @@ void OctTree::insert(WaterParticle* particle)
 	if (particle == NULL)
 		return;
 
-	if(!inBoundary(particle->r))
+	if (!inBoundary(particle->r))
+	{
 		return;
+	}
 
 	if (this->particle == NULL && !isSubdivided)
 	{
@@ -141,7 +143,7 @@ void OctTree::insert(WaterParticle* particle)
 			particle->r.y() == this->particle->r.y() &&
 			particle->r.z() == this->particle->r.z())
 		{
-			Vector3f temp(particle->r.x(), particle->r.y() + 0.01, particle->r.z());
+			Vector3f temp(particle->r.x(), particle->r.y() + 0.001, particle->r.z());
 			particle->setPosition(temp);
 		}
 		checkOctant(this->particle);

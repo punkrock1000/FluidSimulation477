@@ -17,30 +17,31 @@
 #include "OctTree.h"
 using namespace std;
 
-#define NUM_OF_PARTICLES 3000
+#define NUM_OF_PARTICLES 2000
 #define NUM_NEIGHBORS 16
 #define RADIUS 16
 //Low corner of the initial tree
-#define LC -60
+#define LC -64
 //High corner of the tree
-#define HC 60
+#define HC 64
 
+const static float PARTICLE_MASS = 65.0f;
 const static float M_PI = atan(1) * 4;
 //Variables required for the simulation
-const static Vector3f G(0.0f, 12000 * -9.8f, 0.0f);
+const static Vector3f G(0.0f, -9.81f, 0.0f);
 //const static float M_PI = atan(1) * 4;
 const static float REST_DENS = 1000.0f;
 const static float GAS_CONST = 2000.0f;
-const static float H = 1.2f;
+const static float H = 16.0f;
 const static float HSQ = H * H;
-const static float VISC = 250.0f;
+const static float VISC = 20.0f;
 
 const static float POLY6 = 315.0f / (64.0f * M_PI * pow(H, 9.0f));
-const static float SPIKY_GRAD = -45.0f / (M_PI*pow(H, 6.0f));
-const static float VISC_LAP = 45.0f / (M_PI*pow(H, 6.0f));
+const static float SPIKY_GRAD = -15.0f / (M_PI*pow(H, 6.0f));
+const static float VISC_LAP = 15.0f / (2 * M_PI*pow(H, 3.0f));
 
-const static float TIMESTEP = 0.0008f;
-const static float BOUND_DAMPING = -0.5f;
+const static float TIMESTEP = 0.033f;
+const static float BOUND_DAMPING = -0.4f;
 
 OctTree* myTree;
 WaterParticle* partArray;
@@ -85,7 +86,7 @@ void computeDensityPressure(WaterParticle* particles)
 {
 	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
 	{
-		particles[i].rho = 0;
+		particles[i].rho = REST_DENS;
 		int neighborIdx = 0;
 		for (int j = 0; j < particles[i].neighbors; ++j)
 		{
@@ -93,10 +94,9 @@ void computeDensityPressure(WaterParticle* particles)
 			Vector3f distVec = particles[neighborIdx].r - particles[i].r;
 			float dist = distVec.norm();
 			dist *= dist;
-			particles[i].rho += particles[i].m*POLY6*pow(HSQ - dist, 3.0f);
+			particles[i].rho += POLY6*pow(HSQ - dist, 3.0f);
 		}
-		particles[i].rho *= 1000;
-		particles[i].rho += 960;
+
 		particles[i].p = GAS_CONST * (particles[i].rho - REST_DENS);
 	}
 }
@@ -118,16 +118,20 @@ void computeForces(WaterParticle* particles)
 			neighborIdx = particles[i].neighborIndexes[j];
 			Vector3f distVec = particles[neighborIdx].r - particles[i].r;
 			float dist = distVec.norm();
-			fPress += -distVec.normalized() * particles[i].m *
+			fPress += distVec.normalized() *
 				(particles[i].p + particles[neighborIdx].p) /
-				((2.0f * particles[neighborIdx].rho) * SPIKY_GRAD * pow(H - dist, 2.0f));
+				(2.0f * particles[neighborIdx].rho) * SPIKY_GRAD * pow(H - dist, 6.0f);
 
-			fVisc += VISC * particles[i].m * (particles[neighborIdx].v - particles[i].v)/
-				particles[neighborIdx].rho * VISC_LAP * (H - dist);
+			//Taken from the slides
+			fVisc += VISC *  (particles[neighborIdx].v - particles[i].v)/
+				particles[neighborIdx].rho * VISC_LAP * (pow(dist, 3.0f)/2*pow(H, 3.0f) +
+					pow(dist, 2.0f)/pow(H, 2.0f) + H/(2*dist) - 1);
 		}
 		fGrav = G;
 		fGrav = fGrav * particles[i].rho;
-		
+		//Hardcoded to get better results
+		fPress *= 800000;
+		//Navier stokes equation
 		particles[i].f = fPress + fVisc + fGrav;
 	}
 }
@@ -419,14 +423,14 @@ void resetSimulationVariables()
 void instantiateOctTree(OctTree* simTree, WaterParticle* particles)
 {
 	//Check if array has been instantiated
-	if (particles[0].m != 25.0f)
+	if (particles[0].m != PARTICLE_MASS)
 	{
 		for (int i = 0; i < NUM_OF_PARTICLES; i++)
 		{
-			particles[i].setPosition(Vector3f(RandomFloat(4 * LC / 8, 4 * HC / 8),
-				RandomFloat(4 * LC / 8, 4 * HC / 8),
-				RandomFloat(4 * LC / 8, 4 * HC / 8)));
-			particles[i].m = 25.0f;
+			particles[i].setPosition(Vector3f(RandomFloat(6 * LC / 8, 6 * HC / 8),
+				RandomFloat(6 * LC / 8, 6 * HC / 8),
+				RandomFloat(6 * LC / 8, 6 * HC / 8)));
+			particles[i].m = PARTICLE_MASS;
 			particles[i].v = Vector3f(0.0f, 0.0f, 0.0f);
 			particles[i].p = 1000.0f;
 			particles[i].neighbors = 0;

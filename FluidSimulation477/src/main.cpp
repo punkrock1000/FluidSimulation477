@@ -519,6 +519,7 @@ void instantiateOctTree(OctTree* simTree, WaterParticle* particles)
 	//Check if array has been instantiated
 	if (particles[0].m != PARTICLE_MASS)
 	{
+		srand(time(NULL));
 		for (int i = 0; i < NUM_OF_PARTICLES; i++)
 		{
 			particles[i].setPosition(Vector3f(RandomFloat(6 * LC / 8, 6 * HC / 8),

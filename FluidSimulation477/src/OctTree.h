@@ -34,12 +34,10 @@ public:
 	~OctTree();
 
 	void reset();
-	//TODO: Add WaterParticle class
 	void insert(WaterParticle*);
 	bool inBoundary(Vector3f);
 	bool isRoot();
 	bool withinSphere(Vector3f center, float radius);
-	//bool withinSphere(Vector3f, float);
 	static bool cubeIntersectsSphere(Vector3f, Vector3f, Vector3f, float);
 	void getNeighbors(WaterParticle* particle, int, float, int&);
 	void countParticles(int&);

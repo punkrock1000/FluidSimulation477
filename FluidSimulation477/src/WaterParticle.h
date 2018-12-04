@@ -19,7 +19,6 @@ public:
 	float rho, p;//particle density, pressure
 	int neighbors, arrayIndex;
 	int neighborIndexes[16];
-	//WaterParticle* a ;//neighbours 0-7
 
 	int global_Index;
 	
@@ -38,7 +37,6 @@ public:
 	//face 4: 1,2,7,6
 	//face 5: 2,3,4,7
 	//face 6: 0,1,6,5
-
 
 	WaterParticle();
 };

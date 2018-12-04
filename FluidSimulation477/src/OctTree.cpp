@@ -12,7 +12,7 @@ OctTree::OctTree()
 {
 	bottomLeftBack = Vector3f(0, 0, 0);
 	topRightFront = Vector3f(0, 0, 0);
-	particle = NULL;
+	particle = nullptr;
 	initializeSubnodes();
 }
 
@@ -30,7 +30,7 @@ void OctTree::initializeSubnodes()
 {
 	for (int i = 0; i < 8; ++i)
 	{
-		subnodes[i] = NULL;
+		subnodes[i] = nullptr;
 	}
 }
 
@@ -111,7 +111,7 @@ void OctTree::checkOctant(WaterParticle* particle)
 		}
 	}
 
-	if (subnodes[index] == NULL)
+	if (subnodes[index] == nullptr)
 	{
 		subnodes[index] = new OctTree(newBLB, newTRF, this);
 	}
@@ -120,7 +120,7 @@ void OctTree::checkOctant(WaterParticle* particle)
 
 void OctTree::insert(WaterParticle* particle)
 {
-	if (particle == NULL)
+	if (particle == nullptr)
 		return;
 
 	if (!inBoundary(particle->r))
@@ -128,7 +128,7 @@ void OctTree::insert(WaterParticle* particle)
 		return;
 	}
 
-	if (this->particle == NULL && !isSubdivided)
+	if (this->particle == nullptr && !isSubdivided)
 	{
 		this->particle = particle;
 		this->center = Vector3f((topRightFront.x() + bottomLeftBack.x()) / 2, 
@@ -137,7 +137,7 @@ void OctTree::insert(WaterParticle* particle)
 		return;
 	}
 
-	if (this->particle != NULL)
+	if (this->particle != nullptr)
 	{
 		if (particle->r.x() == this->particle->r.x() &&
 			particle->r.y() == this->particle->r.y() &&
@@ -148,7 +148,7 @@ void OctTree::insert(WaterParticle* particle)
 		}
 		checkOctant(this->particle);
 		isSubdivided = true;
-		this->particle = NULL;
+		this->particle = nullptr;
 	}
 	checkOctant(particle);
 	return;
@@ -161,15 +161,15 @@ void OctTree::reset()
 
 	for (int i = 0; i < 8; ++i)
 	{
-		if (subnodes[i] != NULL)
+		if (subnodes[i] != nullptr)
 		{
 			delete subnodes[i];
-			subnodes[i] = NULL;
+			subnodes[i] = nullptr;
 		}
 	}
 
-	if (this->particle != NULL)
-		this->particle = NULL;
+	if (this->particle != nullptr)
+		this->particle = nullptr;
 
 	isSubdivided = false;
 }
@@ -187,7 +187,7 @@ void OctTree::getNeighbors(WaterParticle* particle, int numNeighbors, float radi
 	if (curNeighborIdx < numNeighbors)
 	{
 		//Check if at a leaf node
-		if (this->particle != NULL)
+		if (this->particle != nullptr)
 		{
 			if (distance(this->particle->r, particle->r) <= radius)
 			{
@@ -202,7 +202,7 @@ void OctTree::getNeighbors(WaterParticle* particle, int numNeighbors, float radi
 		//Check if sphere of the radius intersects with a subnode
 		for (int i = 0; i < 8; ++i)
 		{
-			if (subnodes[i] != NULL)
+			if (subnodes[i] != nullptr)
 			{
 				if (this->cubeIntersectsSphere(subnodes[i]->bottomLeftBack, subnodes[i]->topRightFront,
 					particle->r, radius))
@@ -214,13 +214,13 @@ void OctTree::getNeighbors(WaterParticle* particle, int numNeighbors, float radi
 
 void OctTree::countParticles(int &particleCount)
 {
-	if (this->particle != NULL)
+	if (this->particle != nullptr)
 	{
 		particleCount++;
 	}
 	for (int i = 0; i < 8; ++i)
 	{
-		if (subnodes[i] != NULL)
+		if (subnodes[i] != nullptr)
 		{
 			subnodes[i]->countParticles(particleCount);
 		}
@@ -252,7 +252,7 @@ bool OctTree::inBoundary(Vector3f _pos)
 
 bool OctTree::isRoot()
 {
-	return parent == NULL;
+	return parent == nullptr;
 }
 
 OctTree::~OctTree()

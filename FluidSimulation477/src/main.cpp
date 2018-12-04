@@ -279,15 +279,38 @@ void timerFunction(int value)
     glutPostRedisplay();
 }
 
+void resetSimulationVariables()
+{
+	myTree->reset();
+}
+
+void initializeSimVariables()
+{
+	//The tree to hold our particles
+	myTree = new OctTree(Vector3f(LC, LC, LC), Vector3f(HC, HC, HC), NULL);
+
+	//The array which will also hold the particles for displaying
+	partArray = new WaterParticle[NUM_OF_PARTICLES];
+
+	//Instantiating particles with random values
+	//instantiateOctTree(myTree, partArray);
+
+	int neighbCount = 0;
+}
+
 void handleKeyPress(unsigned char key, int x, int y)
 { 
 	string fn;
     switch(key)
     {
-		case 'q': case 27: // Pressing enter or 'q' exits the program
-			exit(0);
-			break;
-		default: break;
+	case 'r':
+		resetSimulationVariables();
+		initializeSimVariables();
+		break;
+	case 'q': case 27: // Pressing enter or 'q' exits the program
+		exit(0);
+		break;
+	default: break;
     }
 }
 
@@ -415,11 +438,6 @@ void mouseMoveEvent(int x, int y)
     }
 }
 
-void resetSimulationVariables()
-{
-	myTree->reset();
-}
-
 void instantiateOctTree(OctTree* simTree, WaterParticle* particles)
 {
 	//Check if array has been instantiated
@@ -486,20 +504,6 @@ void display()
     glutSwapBuffers();
 
 	resetSimulationVariables();
-}
-
-void initializeSimVariables()
-{
-	//The tree to hold our particles
-	myTree = new OctTree(Vector3f(LC, LC, LC), Vector3f(HC, HC, HC), NULL);
-
-	//The array which will also hold the particles for displaying
-	partArray = new WaterParticle[NUM_OF_PARTICLES];
-
-	//Instantiating particles with random values
-	//instantiateOctTree(myTree, partArray);
-
-	int neighbCount = 0;
 }
 
 int main(int argc, char **argv)

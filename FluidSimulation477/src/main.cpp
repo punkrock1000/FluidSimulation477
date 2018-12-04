@@ -15,9 +15,12 @@
 #include <algorithm>
 #include "utils.h"
 #include "OctTree.h"
+#include "tbb/tbb.h"
+
+using namespace tbb;
 using namespace std;
 
-#define NUM_OF_PARTICLES 2000
+#define NUM_OF_PARTICLES 3000
 #define NUM_NEIGHBORS 16
 #define RADIUS 16
 //Low corner of the initial tree
@@ -81,59 +84,128 @@ double _dragPosX = 0.0;
 double _dragPosY = 0.0;
 double _dragPosZ = 0.0;
 
-//Computes the density and pressure for all particles
-void computeDensityPressure(WaterParticle* particles)
-{
-	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
-	{
-		particles[i].rho = REST_DENS;
-		int neighborIdx = 0;
-		for (int j = 0; j < particles[i].neighbors; ++j)
-		{
-			neighborIdx = particles[i].neighborIndexes[j];
-			Vector3f distVec = particles[neighborIdx].r - particles[i].r;
-			float dist = distVec.norm();
-			dist *= dist;
-			particles[i].rho += POLY6*pow(HSQ - dist, 3.0f);
-		}
 
-		particles[i].p = GAS_CONST * (particles[i].rho - REST_DENS);
-	}
+void getNeighbors(WaterParticle* particles, int index)
+{
+	int neighbCount = 0;
+	myTree->getNeighbors(&partArray[index], NUM_NEIGHBORS, RADIUS, neighbCount);
+	partArray[index].neighbors = neighbCount;
 }
 
-//Computes the forces required for the simulation for all particles
-void computeForces(WaterParticle* particles)
+void computeDensity(WaterParticle* particles, int index)
+{
+	particles[index].rho = REST_DENS;
+	int neighborIdx = 0;
+	for (int j = 0; j < particles[index].neighbors; ++j)
+	{
+		neighborIdx = particles[index].neighborIndexes[j];
+		Vector3f distVec = particles[neighborIdx].r - particles[index].r;
+		float dist = distVec.norm();
+		dist *= dist;
+		particles[index].rho += POLY6 * pow(HSQ - dist, 3.0f);
+	}
+
+	particles[index].p = GAS_CONST * (particles[index].rho - REST_DENS);
+}
+
+void computeForce(WaterParticle* particles, int index)
 {
 	Vector3f fPress(0.0f, 0.0f, 0.0f);
 	Vector3f fVisc(0.0f, 0.0f, 0.0f);
 	Vector3f fGrav(0.0f, 0.0f, 0.0f);
 	int neighborIdx = 0;
-	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
+	for (int j = 0; j < particles[index].neighbors; ++j)
 	{
-		fPress.setZero();
-		fVisc.setZero();
-		//std::cout << particles[i].neighbors << "   <-- NEIGHBOR NUM" << endl;
-		for (int j = 0; j < particles[i].neighbors; ++j)
-		{
-			neighborIdx = particles[i].neighborIndexes[j];
-			Vector3f distVec = particles[neighborIdx].r - particles[i].r;
-			float dist = distVec.norm();
-			fPress += distVec.normalized() *
-				(particles[i].p + particles[neighborIdx].p) /
-				(2.0f * particles[neighborIdx].rho) * SPIKY_GRAD * pow(H - dist, 6.0f);
+		neighborIdx = particles[index].neighborIndexes[j];
+		Vector3f distVec = particles[neighborIdx].r - particles[index].r;
+		float dist = distVec.norm();
+		fPress += distVec.normalized() *
+			(particles[index].p + particles[neighborIdx].p) /
+			(2.0f * particles[neighborIdx].rho) * SPIKY_GRAD * pow(H - dist, 6.0f);
 
-			//Taken from the slides
-			fVisc += VISC *  (particles[neighborIdx].v - particles[i].v)/
-				particles[neighborIdx].rho * VISC_LAP * (pow(dist, 3.0f)/2*pow(H, 3.0f) +
-					pow(dist, 2.0f)/pow(H, 2.0f) + H/(2*dist) - 1);
-		}
-		fGrav = G;
-		fGrav = fGrav * particles[i].rho;
-		//Hardcoded to get better results
-		fPress *= 800000;
-		//Navier stokes equation
-		particles[i].f = fPress + fVisc + fGrav;
+		//Taken from the slides
+		fVisc += VISC * (particles[neighborIdx].v - particles[index].v) /
+			particles[neighborIdx].rho * VISC_LAP * (pow(dist, 3.0f) / 2 * pow(H, 3.0f) +
+				pow(dist, 2.0f) / pow(H, 2.0f) + H / (2 * dist) - 1);
 	}
+	fGrav = G;
+	fGrav = fGrav * particles[index].rho;
+	//Hardcoded to get better results
+	fPress *= 800000;
+	//Navier stokes equation
+	particles[index].f = fPress + fVisc + fGrav;
+}
+
+class GetNeighbors {
+	WaterParticle *const my_a;
+
+public:
+
+	void operator() (const blocked_range<size_t>& r) const
+	{
+		WaterParticle *a = my_a;
+		for (size_t i = r.begin(); i != r.end(); i++)
+		{
+			getNeighbors(a, i);
+		}
+	}
+
+	GetNeighbors(WaterParticle a[]) :
+		my_a(a)
+	{}
+};
+
+class ComputeDensities {
+	WaterParticle *const my_a;
+
+public:
+
+	void operator() (const blocked_range<size_t>& r) const
+	{
+		WaterParticle *a = my_a;
+		for (size_t i = r.begin(); i != r.end(); i++)
+		{
+			computeDensity(a, i);
+		}
+	}
+
+	ComputeDensities(WaterParticle a[]) :
+		my_a(a)
+	{}
+};
+
+class ComputeForces {
+	WaterParticle *const my_a;
+
+public:
+
+	void operator() (const blocked_range<size_t>& r) const
+	{
+		WaterParticle *a = my_a;
+		for (size_t i = r.begin(); i != r.end(); i++)
+		{
+			computeForce(a, i);
+		}
+	}
+
+	ComputeForces(WaterParticle a[]) :
+		my_a(a)
+	{}
+};
+
+void getNeighborsTbb(WaterParticle particles[], size_t n)
+{
+	parallel_for(blocked_range <size_t>(0, n), GetNeighbors(particles));
+}
+
+void computeDensitiesTbb(WaterParticle particles[], size_t n)
+{
+	parallel_for(blocked_range <size_t>(0, n), ComputeDensities(particles));
+}
+
+void computeForcesTbb(WaterParticle particles[], size_t n)
+{
+	parallel_for(blocked_range <size_t>(0, n), ComputeForces(particles));
 }
 
 //Updates the positions of the particles using the new forces
@@ -152,7 +224,7 @@ void integrate(WaterParticle* particles)
 		if ((particles[i].r.y()) < LC)
 		{
 			particles[i].v.y() *= BOUND_DAMPING;
-			particles[i].r.y() = LC + H / 50;
+			particles[i].r.y() = LC + H / 200;
 		}
 		if ((particles[i].r.z()) < LC)
 		{
@@ -470,18 +542,12 @@ void calculateSimulationVariables()
 {
 	instantiateOctTree(myTree, partArray);
 
-	int neighbCount = 0;
-	for (int i = 0; i < NUM_OF_PARTICLES; ++i)
-	{
-		myTree->getNeighbors(&partArray[i], NUM_NEIGHBORS, RADIUS, neighbCount);
-		partArray[i].neighbors = neighbCount;
-		neighbCount = 0;
-	}
+	getNeighborsTbb(partArray, NUM_OF_PARTICLES);
 
 	// Get forces from neighbors
-	computeDensityPressure(partArray);
+	computeDensitiesTbb(partArray, NUM_OF_PARTICLES);
 
-	computeForces(partArray);
+	computeForcesTbb(partArray, NUM_OF_PARTICLES);
 
 	// Update positions from forces
 	integrate(partArray);

@@ -184,7 +184,7 @@ section {
              <div style="background-color: #FFF; width:100%;">
                  <div class="row">
                  <p style="padding-top:20px;  padding-bottom: 30px; margin-left: 40px; margin-right: 40px; text-align: left; font-size: 25px; line-height: 1.6;">
-                    From that, we began to build a data structure to support the entire system. Through various methods that could have been implemented, we decided to use our own custom Octree. Once the data structure has been set, we simply just followed the research and it's given algorithms on implementing SPH. During our implementation process, we did encounter multiple situations where our code wasn't running as well as we had intended. The major one was Naiver-Stokes and the algorithm for SPH.
+                    From that, we began to build a data structure to support the entire system. Through various methods that could have been implemented, a custom Octree data structure was used to get the neighbors of a given particle, using the kernel radius. Some damping was also included to deal with collisions with the boundaries. The integration method implemented was explicit Euler, hence giving some unwanted results due to inaccuracy. We used an older version of Open GL (2.1), the Eigen library and Intel’s TBB, to parallelize some of the code and improve performance.. Once the data structure has been set, we simply just followed the research and it's given algorithms on implementing SPH. During our implementation process, we did encounter multiple situations where our code wasn't running as well as we had intended. The major one was Naiver-Stokes and the algorithm for SPH.
                 </p>
                  </div>
                  
@@ -224,7 +224,8 @@ section {
                  
                   <div class="row">
                  <p style="width: 100%; padding-top:20px;  padding-bottom: 30px; margin-left: 40px; margin-right: 40px; text-align: center; font-size: 25px;">
-                    In the following video, you will see that our problem could have been a variety of things such as lack of pressure.
+                    In the following video, you will see that our problem could have been a variety of things such as lack of pressure. While all of the physics were implemented, some of them are not working properly. The variables that influence the simulation correctly are gravity, viscosity and forces. However, we were not able to make the fluid incompressible, which means that the density within the WaterParticle does not remain constant. This is why we can observe that the water particles fall flat and collide into each other, ending up at the corners rapidly.
+
                      
                 </p>
                  </div>
@@ -238,6 +239,12 @@ section {
               </div>
                  
                 
+                  <div class="row">
+                 <p style="width: 100%; padding-top:20px;  padding-bottom: 30px; margin-left: 40px; margin-right: 40px; text-align: center; font-size: 25px;">
+                     Though we have implemented our base code for fluid simulation, we didn’t have enough time to include any properties that will simulate the physics property of oobleck.
+
+                </p>
+                 </div>
                  
                  <div class="row">
                      <div style="width: 100%; text-align: center;margin-top: 20px;">

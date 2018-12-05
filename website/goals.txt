@@ -1,0 +1,36 @@
+General Description
+
+The goal of this project is to create a realistic and accurate fluid simulation, using efficient algorithms which can allow for a large number of particles. We will be using a particle system to implement smoothed particle hydrodynamics (SPH) interpolation. As we have limited time and no experience on the subject, exploring particle fluid simulation is much more suited than grid based solutions. The project will be developed using C++, OpenGl and any other useful libraries that may come up during the research period.
+
+Motivation
+
+	Out of all the topics that we had considered, fluid simulation was one that appealed to us. From our understanding, it is a topic that has been researched extensively and there are a variety of resources to draw information from. Originally, we were curious to explore this topic by simulating the physics property of oobleck (a particular mixing ratio with cornstarch and water mixture) solution. After some discussion, we concluded that it is strategically better to study basic fluid simulation through a conducted research, attempt to recreate the implementation and only at the end will we try to add more if time permits.
+
+
+Objectives / Milestones
+
+1)  	Look up previous research papers and projects on fluid simulation
+2)  	Create a simple OpenGL project generating simple particles
+3)  	Incorporate OpenGL specialty libraries (if needed)
+4)  	Implement functions for the physics calculations (based on research)
+5) 	Implement a simple SPH fluid solver
+6) 	Adjust proper variables for fluid particles realism
+7)	Implement boundary handling scheme
+8)	Improve shading/texture for realism output
+9)   	Provide a simple UI to toggle fluid simulation
+10)   	Documentation, website and video for project
+
+BONUS, based on remaining time:
+11)  	Experiment with oobleck implementation
+12)  	Allow the user to change the wind direction and wind velocity using the UI. Fluid should react to that change dynamically.
+13) 	Add the ability to drop objects of different sizes and densities into the water. Depending on the material of the object, it could float or sink.
+14) 	Use our fluid simulation code to construct terrain simulations. (realistic river dropping into a lake, fountain, hydroelectric dam, etc.)
+
+References	
+
+[1]	https://users.encs.concordia.ca/~grogono/Graphics/fluid-5.pdf
+[2] 	https://www.3dgep.com/simulating-particle-effects-using-opengl/ 
+[3]
+https://pdfs.semanticscholar.org/e008/6d3fcdfae7bbb3c3162271e5cfd2c5fe1117.pdf 
+[4]	https://cg.informatik.uni-freiburg.de/course_notes/sim_10_sph.pdf 
+[5]	https://pdfs.semanticscholar.org/fbc1/b9c2a3438c79a1ef8684bc87ac5e2149643e.pdf 

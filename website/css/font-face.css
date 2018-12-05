@@ -1,0 +1,12 @@
+/*****************************
+ All rights reserved.
+ AllFont.ru (c) 2011-2015
+ *****************************/
+@font-face {
+    font-family: 'World of Water';
+    font-style: normal;
+    font-weight: 400;
+    src: local('World of Water'), local('WorldofWater-Regular'),
+        url(../fonts/world-of-water_86daf46ae26b88c224b1a37bd63c38bc.woff) format('woff'),
+        url(../fonts/world-of-water_86daf46ae26b88c224b1a37bd63c38bc.ttf) format('truetype');
+}
